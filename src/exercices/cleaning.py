@@ -1,0 +1,61 @@
+import pandas as pd
+import re
+from bson import  ObjectId
+
+## FUNCTIONS
+
+def format_header(header: list[str]) -> list[str]:
+    return [
+        "".join(word.capitalize() for word in col.split())
+        if " " in col else col
+        for col in header
+    ]
+
+def filter_null_values(df:pd.DataFrame):
+    non_null_cols = ["Name", "Gender", "Age", "BloodType"]
+
+    values = df[non_null_cols]
+
+    mask = (
+        values.isna()
+        | values.astype("string").apply(
+            lambda col: col.str.strip().eq("")
+        )
+    ).any(axis=1)
+
+    return df.loc[~mask].copy()
+
+def drop_duplicates_w_criterias(df: pd.DataFrame) -> pd.DataFrame:
+    criterias = [
+        "Name", "Gender",
+        "DateOfAdmission", "DischargeDate",
+        "BloodType", "BillingAmount",
+        "RoomNumber", "Medication",
+        "Hospital"
+    ]
+
+    df = df[~df[criterias].duplicated(keep=False)].reset_index(drop=True)
+
+    return df
+
+
+def clean_data(df: pd.DataFrame) -> pd.DataFrame:
+
+    print('Renommage du header et des valeurs de l\'attribut "Name"')
+
+    df.columns = format_header(df.columns)
+    print("Suppression des valeurs nulles")
+    df = filter_null_values(df)
+    df["Name"]=df["Name"].str.title()
+
+    print("Suppression des doublons simples en cours")
+
+    df_wo_doublons = drop_duplicates_w_criterias(df)
+
+    print(f"La suppression des doublons simples a occasionné {len(df) - len(df_wo_doublons)} lignes supprimées.\n"
+      f"Environ {round((len(df) - len(df_wo_doublons)) / len(df) * 100,1)}% du fichier a donc été affecté.")
+
+    return df_wo_doublons
+
+
+

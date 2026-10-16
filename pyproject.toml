@@ -1,0 +1,28 @@
+[project]
+name = "exercices"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "arnaud-degreze", email = "arnaud.degreze@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "jupyter>=1.1.1",
+    "matplotlib>=3.11.2",
+    "missingno>=0.5.2",
+    "pandas>=3.0.6",
+    "pymongo>=4.18.3",
+]
+
+[project.scripts]
+exercices = "exercices:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
