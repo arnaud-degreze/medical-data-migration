@@ -1,33 +1,10 @@
 import pandas as pd
 from bson import ObjectId
 
-def normalize_name(full_name : str) -> str:
-    if not isinstance(full_name, str) or not full_name.strip():
-        raise ValueError("Nom absent ou invalide")
-
-    parts = full_name.strip().split()
-
-    titles = {"mr", "mrs", "ms", "miss", "dr"}
-    suffixes = {"jr", "sr"}
-
-    if parts and parts[0].rstrip(".").casefold() in titles:
-        parts.pop(0)
-
-    if parts and parts[-1].rstrip(".").casefold() in suffixes:
-        parts.pop()
-
-    if len(parts) < 2:
-        raise ValueError(f"Nom ambigu : {value!r}")
-
-    first_name = parts[0].casefold()
-    last_name = " ".join(parts[1:]).casefold()
-
-    return first_name, last_name
-
 
 def build_patient_key(row) -> tuple: 
     return (
-        normalize_name(row["Name"]),
+        str(row["Name"]),
         int(row["Age"]),
         str(row["Gender"]),
         str(row["BloodType"])

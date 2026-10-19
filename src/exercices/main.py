@@ -1,5 +1,6 @@
 from loading import load_data
 from cleaning import clean_data
+from validation import validate_data
 from transform import transform_data
 from migration import migrate_patients, migrate_admissions
 from pathlib import Path
@@ -16,6 +17,10 @@ def main():
     print("------ DEBUT DU NETTOYAGE ------")
     clean_df = clean_data(df)
     print("------ NETTOYAGE TERMINE ------")
+
+    print("------ DEBUT DE LA VALIDATION ------")
+    validate_df = validate_data(clean_df)
+    print("------ VALIDATION TERMINEE ------")
 
     print("------ DEBUT DE LA TRANSFORMATION ------")
     patients_df, admissions_df = transform_data(clean_df)

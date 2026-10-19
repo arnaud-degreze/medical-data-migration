@@ -25,6 +25,30 @@ def filter_null_values(df:pd.DataFrame):
 
     return df.loc[~mask].copy()
 
+def normalize_name(full_name : str) -> str:
+    if not isinstance(full_name, str) or not full_name.strip():
+        raise ValueError("Nom absent ou invalide")
+
+    parts = full_name.strip().split()
+
+    titles = {"mr", "mrs", "ms", "miss", "dr"}
+    suffixes = {"jr", "sr"}
+
+    if parts and parts[0].rstrip(".").casefold() in titles:
+        parts.pop(0)
+
+    if parts and parts[-1].rstrip(".").casefold() in suffixes:
+        parts.pop()
+
+    if len(parts) < 2:
+        raise ValueError(f"Nom ambigu : {value!r}")
+
+    first_name = parts[0].casefold()
+    last_name = " ".join(parts[1:]).casefold()
+
+    return first_name + " " + last_name
+
+
 def drop_duplicates_w_criterias(df: pd.DataFrame) -> pd.DataFrame:
     criterias = [
         "Name", "Gender",
@@ -46,7 +70,8 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     df.columns = format_header(df.columns)
     print("Suppression des valeurs nulles")
     df = filter_null_values(df)
-    df["Name"]=df["Name"].str.title()
+
+    df["Name"] = df["Name"].apply(normalize_name)
 
     print("Suppression des doublons simples en cours")
 

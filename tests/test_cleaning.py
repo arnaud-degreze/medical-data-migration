@@ -1,7 +1,8 @@
-from exercices.cleaning import format_header, filter_null_values, clean_data
+from exercices.cleaning import format_header, filter_null_values, normalize_name, clean_data
 import pytest
 import pandas as pd
 
+# ---------------------- TEST VARIABLES DECLARATION -----------------------
 
 @pytest.fixture
 def list_test_format_header():
@@ -19,6 +20,12 @@ def df_test_missing_values():
         "PatientId": [1, 2, 3, 4, 5]
     })
 
+@pytest.fixture
+def df_test_normalize_name():
+    return pd.DataFrame({
+        "Name": ["Dr. James Test", "Mr. JAMES test", "MR. James Test Jr", "James TEST Sr."],
+        "WhatNot": [True, True, True, True]
+    })
 
 @pytest.fixture
 def df_test_for_idempotence():
@@ -37,6 +44,9 @@ def df_test_for_idempotence():
         "Discharge Date": ["2023-11-16", "2023-11-16", "2023-11-16", "2023-11-16"]
     })
 
+# ---------------------- TEST FUNCTIONS DECLARATION -----------------------
+
+
 def test_format_header(list_test_format_header):
     result = format_header(list_test_format_header)
     res = [True for text in result
@@ -46,6 +56,18 @@ def test_format_header(list_test_format_header):
 def test_filter_null_values(df_test_missing_values):
     result = filter_null_values(df_test_missing_values)
     assert len(result) == 2
+
+def test_incorrect_full_name():
+    with pytest.raises(ValueError) as e_info:
+        assert normalize_name("   ")
+        assert normalize_name(45)
+        assert normalize_name("Jean")
+
+def test_stripping_pre_su_ffix(df_test_normalize_name):
+    result = df_test_normalize_name["Name"].apply(normalize_name)
+    is_same_name = [True for name in result
+                    if name == "james test"]
+
 
 def test_no_missing_values_in_required_columns(df_test_missing_values):
     result=filter_null_values(df_test_missing_values)

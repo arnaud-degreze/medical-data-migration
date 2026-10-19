@@ -22,8 +22,9 @@ htmlcov/
 data/healthcare_dataset.csv
 
 # Files not published
-/archi_schema/
+/archi_schema
 /create_fictif.py
+/a_faire.txt
 
 # Secrets and environment variables
 .env

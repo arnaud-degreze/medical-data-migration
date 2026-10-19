@@ -29,33 +29,29 @@ class Patient(TypedDict):
 def to_admission(row) -> Admission:
     return {
         "PatientId": ObjectId(row["PatientId"]),
-        "MedicalCondition": str(row["MedicalCondition"]),
-        "DateOfAdmission": convert_to_datetime(row["DateOfAdmission"]),
-        "Doctor": str(row["Doctor"]),
-        "Hospital": str(row["Hospital"]),
-        "InsuranceProvider": str(row["InsuranceProvider"]),
-        "BillingAmount": float(row["BillingAmount"]),
-        "RoomNumber": int(row["RoomNumber"]),
-        "AdmissionType": str(row["AdmissionType"]),
-        "DischargeDate": convert_to_datetime(row["DischargeDate"]),
-        "Medication": str(row["Medication"]),
-        "TestResults": str(row["TestResults"])
+        "MedicalCondition": row["MedicalCondition"],
+        "DateOfAdmission": row["DateOfAdmission"],
+        "Doctor": row["Doctor"],
+        "Hospital": row["Hospital"],
+        "InsuranceProvider": row["InsuranceProvider"],
+        "BillingAmount": row["BillingAmount"],
+        "RoomNumber": row["RoomNumber"],
+        "AdmissionType": row["AdmissionType"],
+        "DischargeDate": row["DischargeDate"],
+        "Medication": row["Medication"],
+        "TestResults": row["TestResults"]
     }
 
 def to_patient(row) -> Patient:
     return {
-        "Name": str(row["Name"]),
-        "Gender": str(row["Gender"]),
-        "BloodType": str(row["BloodType"]),
-        "Age": int(row["Age"])
+        "Name": row["Name"],
+        "Gender": row["Gender"],
+        "BloodType": row["BloodType"],
+        "Age": row["Age"]
     }
 
 
 ## HELPER
-def convert_to_datetime(date_str: str):
-    format = '%Y-%m-%d'
-    datetime_str = datetime.strptime(date_str, format)
-    return datetime_str
 
 
 def migrate_patients(patients: pd.DataFrame):
@@ -74,12 +70,13 @@ def migrate_patients(patients: pd.DataFrame):
 
         print(f'Ecriture dans la collection "patients" terminée ?', res.acknowledged)
 
+        print(f"{len(operations)} documents ont été écrits")
         client.close()
         print("Connexion clôturée")
 
     except Exception as e:
         raise Exception(
-            "The following error occurred: ", e)
+            "The following exception occurred: ", e)
 
 
 def migrate_admissions(admissions: pd.DataFrame):
@@ -98,9 +95,10 @@ def migrate_admissions(admissions: pd.DataFrame):
 
         print(f'Ecriture dans la collection "admissions" terminée ?', res.acknowledged)
 
+        print(f"{len(operations)} documents ont été écrits")
         client.close()
         print("Connexion clôturée")
 
     except Exception as e:
         raise Exception(
-            "The following error occurred: ", e)
+            "The following exception occurred: ", e)

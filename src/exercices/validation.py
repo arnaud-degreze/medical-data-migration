@@ -22,12 +22,14 @@ def validate_data(df: pd.DataFrame) -> pd.DataFrame:
 
     df["DateOfAdmission"] = pd.to_datetime(
         df["DateOfAdmission"],
+        format="%Y-%m-%d",
         errors="raise"
     )
 
     df["DischargeDate"] = pd.to_datetime(
         df["DischargeDate"],
+        format="%Y-%m-%d",
         errors="raise"
     )
 
-    pass
+    return df

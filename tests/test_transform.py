@@ -1,6 +1,7 @@
 import pytest
 import pandas as pd
-from exercices.transforming import normalize_name, get_patient_id, split_dataframe
+from exercices.transforming import  get_patient_id, split_dataframe
+
 
 @pytest.fixture
 def df_test_patient_key():
@@ -22,13 +23,6 @@ def df_test_for_splitting():
         "InsuranceProvider": ["ParisCo", "LyonCo", "MontpellierCO", "TrunbrCo"],
         "Medication": ["Food", "Aspirin", "Ibuprofene", "Chocolat"]
     })
-
-
-def test_incorrect_full_name():
-    with pytest.raises(ValueError) as e_info:
-        assert normalize_name("   ")
-        assert normalize_name(45)
-        assert normalize_name("Jean")
 
 
 def test_duplicate_patient(df_test_patient_key):
