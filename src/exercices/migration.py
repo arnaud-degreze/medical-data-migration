@@ -1,7 +1,8 @@
 from typing import TypedDict
+from collections.abc import Callable
 from datetime import datetime
 from bson import ObjectId
-from pymongo import MongoClient, InsertOne
+from pymongo import MongoClient, InsertOne, UpdateOne
 import pandas as pd
 
 # CLASS DEFINITION
@@ -42,63 +43,193 @@ def to_admission(row) -> Admission:
         "TestResults": row["TestResults"]
     }
 
-def to_patient(row) -> Patient:
+def to_patient(row: dict) -> Patient:
     return {
         "Name": row["Name"],
         "Gender": row["Gender"],
         "BloodType": row["BloodType"],
-        "Age": row["Age"]
+        "Age": int(row["Age"])
     }
 
 
-## HELPER
+def patient_filter(row: dict) -> dict:
+    return to_patient(row)
+
+def admission_filter(row: dict) -> dict:
+    return {
+        "PatientId": row["PatientId"],
+        "DateOfAdmission": row["DateOfAdmission"],
+        "MedicalCondition": row["MedicalCondition"]
+    }
+
+def create_or_update_collection(
+    df: pd.DataFrame,
+    collection,
+    build_filter: Callable[[dict], dict],
+    build_document: Callable[[dict], dict]
+) -> None:
+
+    operations = []
+    for row in df.to_dict("records"):
+        filter = build_filter(row)
+        document = build_document(row)
 
 
-def migrate_patients(patients: pd.DataFrame):
+        operations.append(
+            UpdateOne(
+                filter,
+                {'$setOnInsert': document},
+                upsert=True
+            )
+        )
+
+    if operations:
+        results = collection.bulk_write(
+            operations,
+            ordered = False
+        )
+
+    print(f"Collection {collection.name} : ")
+    print(f"{results.upserted_count} nouveaux documents insérés.")
+    print(f"{results.matched_count} documents déjà existants.")
+
+
+def build_patient_id_map(patients_df: pd.DataFrame,
+                         patients_collection):
+
+
+    records = patients_df.to_dict("records")
+    patient_id_map = {}
+    batch_size=500
+
+    for start in range(0, len(records), batch_size):
+        batch = records[start: start + batch_size]
+
+        filters = [
+            {
+                "Name": row["Name"],
+                "Age": int(row["Age"]),
+                "Gender": row["Gender"],
+                "BloodType": row["BloodType"]
+            }
+            for row in batch
+        ]
+
+        cursor = patients_collection.find(
+            {"$or": filters},
+            {
+                "_id": 1,
+                "Name": 1,
+                "Age": 1,
+                "Gender": 1,
+                "BloodType": 1
+            }
+        )
+
+        mongo_ids = {
+            (
+                doc["Name"],
+                doc["Age"],
+                doc["Gender"],
+                doc["BloodType"]
+            ):doc["_id"]
+            for doc in cursor
+        }
+
+        for row in batch:
+            key =  (
+                row["Name"],
+                int(row["Age"]),
+                row["Gender"],
+                row["BloodType"]
+            )
+            patient_id_map[row["PatientId"]]=mongo_ids[key]
+
+    return patient_id_map
+
+
+
+def ensure_indexes(collection):
+    if collection.name == "patients":
+        collection.create_index(
+            [
+                ("Name", 1),
+                ("Age", 1),
+                ("Gender", 1),
+                ("BloodType", 1)
+            ],
+            unique = True,
+            name = "unique_patient"
+        )
+    else:
+        collection.create_index(
+            [
+                ("PatientId", 1),
+                ("DateOfAdmission", 1),
+                ("MedicalCondition", 1)
+            ],
+            unique =True,
+            name = "unique_admission"
+        )
+
+def associate_patients_id_with_admissions(patient_id_map: dict,
+                                           admissions_df: pd.DataFrame):
+
+    admissions_df["PatientId"] = admissions_df["PatientId"].map(patient_id_map)
+
+    if admissions_df["PatientId"].isna().any():
+        raise ValueError(
+            "Certains PatientId n'ont pas été associés à un patient MongoDB."
+        )
+    return admissions_df
+
+
+
+def migrate_data(patients_df: pd.DataFrame,
+                 admissions_df: pd.DataFrame) -> None:
+
+    uri = "mongodb://localhost:27017/"
+    client = MongoClient(uri)
+    print("Connexion établie au serveur MongoDB - port : 27017")
+
     try:
-        uri = "mongodb://localhost:27017/"
-        client = MongoClient(uri)
-        print("Connexion établie au serveur MongoDB - port : 27017")
-
         database = client["medical"]
-        collection = database["patients"]
-        print('Connectée à la collection "patients" de la database "medical"')
+        print(f"Connecté à la base de donnée {database.name}")
+        patients_collection = database["patients"]
+        admissions_collection = database["admissions"]
+        print("Connexion réussie aux collections {patients_collection.name} et {admissions_collection.name}")
 
-        operations = [InsertOne(to_patient(row)) for index, row in patients.iterrows()]
+        ensure_indexes(patients_collection)
+        ensure_indexes(admissions_collection)
 
-        res = collection.bulk_write(operations)
+        print("Début de l'écriture des patients")
+        create_or_update_collection(
+             patients_df,
+             patients_collection,
+             build_filter=patient_filter,
+             build_document=to_patient
+        )
+        print("Ecriture des patients terminée")
 
-        print(f'Ecriture dans la collection "patients" terminée ?', res.acknowledged)
+        patient_id_map = build_patient_id_map(patients_df, patients_collection)
 
-        print(f"{len(operations)} documents ont été écrits")
-        client.close()
-        print("Connexion clôturée")
+        admissions_df = associate_patients_id_with_admissions(
+            patient_id_map,
+            admissions_df,
+        )
+        print("Début de l'écriture des admissions")
+        create_or_update_collection(
+            admissions_df,
+            admissions_collection,
+            build_filter=admission_filter,
+            build_document=to_admission
+        )
+        print("Ecriture des admissions terminées")
 
     except Exception as e:
         raise Exception(
             "The following exception occurred: ", e)
 
-
-def migrate_admissions(admissions: pd.DataFrame):
-    try:
-        uri = "mongodb://localhost:27017/"
-        client = MongoClient(uri)
-        print("Connexion établie au serveur MongoDB - port : 27017")
-
-        database = client["medical"]
-        collection = database["admissions"]
-        print('Connectée à la collection "admissions" de la database "medical"')
-
-        operations = [InsertOne(to_admission(row)) for index, row in admissions.iterrows()]
-
-        res = collection.bulk_write(operations)
-
-        print(f'Ecriture dans la collection "admissions" terminée ?', res.acknowledged)
-
-        print(f"{len(operations)} documents ont été écrits")
+    finally:
         client.close()
-        print("Connexion clôturée")
-
-    except Exception as e:
-        raise Exception(
-            "The following exception occurred: ", e)
+        print("Connexion au serveur MongoDB clôturée")

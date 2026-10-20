@@ -2,8 +2,10 @@ from loading import load_data
 from cleaning import clean_data
 from validation import validate_data
 from transform import transform_data
-from migration import migrate_patients, migrate_admissions
+from migration import migrate_data
 from pathlib import Path
+
+
 
 
 def main():
@@ -27,10 +29,8 @@ def main():
     print("------ TRANSFORMATION TERMINEE ------")
 
     print("------ DEBUT DE LA MIGRATION ------")
-    migrate_patients(patients_df)
-    migrate_admissions(admissions_df)
+    migrate_data(patients_df, admissions_df)
     print("------ FIN DE LA MIGRATION ------")
-
 
 if __name__ == "__main__":
     main()
