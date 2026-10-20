@@ -174,7 +174,7 @@ def ensure_indexes(collection):
 
 def associate_patients_id_with_admissions(patient_id_map: dict,
                                            admissions_df: pd.DataFrame):
-
+    admissions_df = admissions_df.copy()
     admissions_df["PatientId"] = admissions_df["PatientId"].map(patient_id_map)
 
     if admissions_df["PatientId"].isna().any():
@@ -186,18 +186,19 @@ def associate_patients_id_with_admissions(patient_id_map: dict,
 
 
 def migrate_data(patients_df: pd.DataFrame,
-                 admissions_df: pd.DataFrame) -> None:
+                 admissions_df: pd.DataFrame,
+                 database_name: str =  "medical") -> None:
 
     uri = "mongodb://localhost:27017/"
     client = MongoClient(uri)
     print("Connexion établie au serveur MongoDB - port : 27017")
 
     try:
-        database = client["medical"]
+        database = client[database_name]
         print(f"Connecté à la base de donnée {database.name}")
         patients_collection = database["patients"]
         admissions_collection = database["admissions"]
-        print("Connexion réussie aux collections {patients_collection.name} et {admissions_collection.name}")
+        print(f"Connexion réussie aux collections {patients_collection.name} et {admissions_collection.name}")
 
         ensure_indexes(patients_collection)
         ensure_indexes(admissions_collection)
@@ -217,6 +218,7 @@ def migrate_data(patients_df: pd.DataFrame,
             patient_id_map,
             admissions_df,
         )
+
         print("Début de l'écriture des admissions")
         create_or_update_collection(
             admissions_df,

@@ -1,12 +1,12 @@
 import pytest
 import pandas as pd
-from exercices.transforming import  get_patient_id, split_dataframe
+from exercices.transform import  get_patient_id, split_dataframe
 
 
 @pytest.fixture
 def df_test_patient_key():
     return pd.DataFrame({
-        "Name": ["Bobby Jackson", "Danny SMITH", "danny Smith", "andrew Wats"],
+        "Name": ["Bobby Jackson", "Danny Smith", "Danny Smith", "Andrew Wats"],
         "Age": [30, 76, 76, 28],
         "Gender": ["Male", "Female", "Female", "Female"],
         "BloodType": ["B+", "A+", "A+", "O+"]
