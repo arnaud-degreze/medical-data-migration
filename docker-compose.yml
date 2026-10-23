@@ -13,6 +13,17 @@ services:
             interval: 5s
             timeout: 3s
             retries: 10
+        security_opt:
+            - no-new-privileges:true
+        cap_drop:
+            - ALL
+        cap_add:
+            - CAP_CHOWN               # Required by mongodb to changes files UIDs and GIDs
+            - CAP_SETUID              # Required by gosu to setuid() to mongodb user
+            - CAP_SETGID              # Required by gosu to setgid() to mongodb group
+            - CAP_DAC_OVERRIDE        # Bypass file read, write, and execute permission checks.
+            - CAP_SYS_RESOURCE
+            - CAP_SYSLOG              # read and/or clear kernel message ring buffer
 
     migration:
         image: python3.13_uv:latest
@@ -30,6 +41,11 @@ services:
         restart: "no"
         volumes:
             - ./data:/app/data:ro
+        read_only: true
+        cap_drop:
+            - ALL
+        security_opt:
+            - no-new-privileges:true
 
 volumes:
     mongodb_medical_data:
