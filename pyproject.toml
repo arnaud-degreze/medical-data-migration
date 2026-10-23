@@ -1,5 +1,5 @@
 [project]
-name = "exercices"
+name = "medical_migration"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -8,19 +8,23 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "jupyter>=1.1.1",
-    "matplotlib>=3.11.2",
-    "missingno>=0.5.2",
     "pandas>=3.0.6",
     "pymongo>=4.18.3",
 ]
 
 [project.scripts]
-exercices = "exercices:main"
+medical_migration = "medical_migration.main:main"
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
 build-backend = "uv_build"
+
+[project.optional-dependencies]
+exploration = [
+    "jupyter>=1.1.1",
+    "matplotlib>=3.11.2",
+    "missingno>=0.5.2",
+]
 
 [dependency-groups]
 dev = [

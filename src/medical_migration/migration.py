@@ -4,6 +4,7 @@ from datetime import datetime
 from bson import ObjectId
 from pymongo import MongoClient, InsertOne, UpdateOne
 import pandas as pd
+import os
 
 # CLASS DEFINITION
 class Admission(TypedDict):
@@ -189,9 +190,11 @@ def migrate_data(patients_df: pd.DataFrame,
                  admissions_df: pd.DataFrame,
                  database_name: str =  "medical") -> None:
 
-    uri = "mongodb://localhost:27017/"
+    uri = os.getenv("MONGODB_URI")
+    database_name = os.getenv("MONGODB_DB_NAME")
+
     client = MongoClient(uri)
-    print("Connexion établie au serveur MongoDB - port : 27017")
+    print("Connexion établie au serveur MongoDB")
 
     try:
         database = client[database_name]

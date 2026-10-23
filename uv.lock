@@ -508,35 +508,6 @@ wheels = [
 ]
 
 [[package]]
-name = "exercices"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "jupyter" },
-    { name = "matplotlib" },
-    { name = "missingno" },
-    { name = "pandas" },
-    { name = "pymongo" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "jupyter", specifier = ">=1.1.1" },
-    { name = "matplotlib", specifier = ">=3.11.2" },
-    { name = "missingno", specifier = ">=0.5.2" },
-    { name = "pandas", specifier = ">=3.0.6" },
-    { name = "pymongo", specifier = ">=4.18.3" },
-]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=9.1.1" }]
-
-[[package]]
 name = "fastjsonschema"
 version = "2.22.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1300,6 +1271,40 @@ sdist = { url = "https://files.pythonhosted.org/packages/bd/c0/9f7c9a46090390368
 wheels = [
     { url = "https://files.pythonhosted.org/packages/41/09/5b161152e2d90f7b87f781c2e1267494aef9c32498df793f73ad0a0a494a/matplotlib_inline-0.2.2-py3-none-any.whl", hash = "sha256:3c821cf1c209f59fb2d2d64abbf5b23b67bcb2210d663f9918dd851c6da1fcf6", size = 9534, upload-time = "2026-05-08T17:33:32.055Z" },
 ]
+
+[[package]]
+name = "medical-migration"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "pandas" },
+    { name = "pymongo" },
+]
+
+[package.optional-dependencies]
+exploration = [
+    { name = "jupyter" },
+    { name = "matplotlib" },
+    { name = "missingno" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "jupyter", marker = "extra == 'exploration'", specifier = ">=1.1.1" },
+    { name = "matplotlib", marker = "extra == 'exploration'", specifier = ">=3.11.2" },
+    { name = "missingno", marker = "extra == 'exploration'", specifier = ">=0.5.2" },
+    { name = "pandas", specifier = ">=3.0.6" },
+    { name = "pymongo", specifier = ">=4.18.3" },
+]
+provides-extras = ["exploration"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=9.1.1" }]
 
 [[package]]
 name = "missingno"

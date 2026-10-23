@@ -1,8 +1,8 @@
-from loading import load_data
-from cleaning import clean_data
-from validation import validate_data
-from transform import transform_data
-from migration import migrate_data
+from .loading import load_data
+from .cleaning import clean_data
+from .validation import validate_data
+from .transform import transform_data
+from .migration import migrate_data
 from pathlib import Path
 
 
