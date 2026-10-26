@@ -30,6 +30,8 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
+        command: >
+            sh -c "uv run pytest && uv run medical_migration"
         networks:
             - medical_network
         depends_on:
@@ -41,7 +43,7 @@ services:
         restart: "no"
         volumes:
             - ./data:/app/data:ro
-        read_only: true
+#        read_only: true
         cap_drop:
             - ALL
         security_opt:
