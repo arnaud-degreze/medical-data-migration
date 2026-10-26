@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from exercices.validation import validate_data
+from medical_migration.validation import validate_data
 
 
 @pytest.fixture

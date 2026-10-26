@@ -1,4 +1,4 @@
-from exercices.cleaning import format_header, filter_null_values, normalize_name, clean_data
+from medical_migration.cleaning import format_header, filter_null_values, normalize_name, clean_data
 import pytest
 import pandas as pd
 

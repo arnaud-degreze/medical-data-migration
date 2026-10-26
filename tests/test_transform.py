@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from exercices.transform import  get_patient_id, split_dataframe
+from medical_migration.transform import  get_patient_id, split_dataframe
 
 
 @pytest.fixture
