@@ -33,4 +33,4 @@ def load_data(path : str) -> pd.DataFrame:
         raise Exception(f"These columns are absent : {missing_cols}")
 
     return df
- 		
+

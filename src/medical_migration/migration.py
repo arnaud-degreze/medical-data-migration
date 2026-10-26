@@ -188,10 +188,11 @@ def associate_patients_id_with_admissions(patient_id_map: dict,
 
 def migrate_data(patients_df: pd.DataFrame,
                  admissions_df: pd.DataFrame,
-                 database_name: str =  "medical") -> None:
+                 database_name: str | None = None) -> None:
 
     uri = os.getenv("MONGODB_URI")
-    database_name = os.getenv("MONGODB_DB_NAME")
+    if database_name is None:
+        database_name = os.getenv("MONGODB_DB_NAME")
 
     client = MongoClient(uri)
     print("Connexion établie au serveur MongoDB")
