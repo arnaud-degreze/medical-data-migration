@@ -1,6 +1,7 @@
+import os
 import pytest
 import pandas as pd
-from exercices.migration import (
+from medical_migration.migration import (
     to_patient,
     to_admission,
     associate_patients_id_with_admissions,
@@ -108,6 +109,7 @@ def test_associate_patient_ids_raises_if_missing():
         )
 
 def test_idempotence_migration(test_data):
+    uri = os.getenv("MONGODB_URI")
     database_name = "medical_test"
 
     test_df=pd.DataFrame([test_data])
@@ -128,19 +130,20 @@ def test_idempotence_migration(test_data):
         "TestResults"
     ]]
 
-    client = MongoClient("mongodb://localhost:27017/")
+    client = MongoClient(uri)
+    
     try:
         client.drop_database(database_name)
     finally:
         client.close()
-
+    
     # Première migration avec les données à tester
     migrate_data(
         patients_df,
         admissions_df,
         database_name)
 
-    client = MongoClient("mongodb://localhost:27017/")
+    client = MongoClient(uri)
     try:
         db = client[database_name]
         patients_before = db["patients"].count_documents({})
@@ -156,8 +159,8 @@ def test_idempotence_migration(test_data):
         assert db["patients"].count_documents({}) == patients_before
         assert db["admissions"].count_documents({}) == admissions_before
 
-        #assert patients_before == 1
-        #assert admissions_before == 1
+        assert patients_before == 1
+        assert admissions_before == 1
 
     finally:
         client.drop_database(database_name)

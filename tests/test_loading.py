@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 
-from exercices.loading import load_data
+from medical_migration.loading import load_data
 
 def test_missing_file():
     with pytest.raises(FileNotFoundError):
