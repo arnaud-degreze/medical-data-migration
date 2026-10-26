@@ -4,8 +4,17 @@ services:
         container_name: mongodb_medical
         ports:
             - "127.0.0.1:27017:27017"
+        env_file: .env
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+            MONGO_MIGRATION_USERNAME: ${MONGO_MIGRATION_USERNAME}
+            MONGO_MIGRATION_PASSWORD: ${MONGO_MIGRATION_PASSWORD}
+            MONGO_ANALYST_USERNAME: ${MONGO_ANALYST_USERNAME}
+            MONGO_ANALYST_PASSWORD: ${MONGO_ANALYST_PASSWORD}
         volumes:
             - mongodb_medical_data:/data/db
+            - ./mongo_init:/docker-entrypoint-initdb.d:ro
         networks:
             - medical_network
         healthcheck:
