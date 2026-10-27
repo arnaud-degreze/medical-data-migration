@@ -191,10 +191,20 @@ def migrate_data(patients_df: pd.DataFrame,
                  database_name: str | None = None) -> None:
 
     uri = os.getenv("MONGODB_URI")
+    username = os.getenv("MONGO_TESTER_USERNAME")
+    password = os.getenv("MONGO_TESTER_PASSWORD")
+
     if database_name is None:
         database_name = os.getenv("MONGODB_DB_NAME")
+        username = os.getenv("MONGO_MIGRATION_USERNAME")
+        password = os.getenv("MONGO_MIGRATION_PASSWORD")
 
-    client = MongoClient(uri)
+    client = MongoClient(
+        uri,
+        username = username,
+        password = password,
+        authSource = database_name
+    )
     print("Connexion établie au serveur MongoDB")
 
     try:
