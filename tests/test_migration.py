@@ -110,6 +110,9 @@ def test_associate_patient_ids_raises_if_missing():
 
 def test_idempotence_migration(test_data):
     uri = os.getenv("MONGODB_URI")
+    username = os.getenv("MONGO_TESTER_USERNAME")
+    password = os.getenv("MONGO_TESTER_PASSWORD")
+
     database_name = "medical_test"
 
     test_df=pd.DataFrame([test_data])
@@ -130,20 +133,31 @@ def test_idempotence_migration(test_data):
         "TestResults"
     ]]
 
-    client = MongoClient(uri)
-    
+    client = MongoClient(
+        uri,
+        username = username,
+        password = password,
+        authSource = database_name
+    )
+
     try:
         client.drop_database(database_name)
     finally:
         client.close()
-    
+
     # Première migration avec les données à tester
     migrate_data(
         patients_df,
         admissions_df,
         database_name)
 
-    client = MongoClient(uri)
+
+    client = MongoClient(
+        uri,
+        username = username,
+        password = password,
+        authSource = database_name
+    )
     try:
         db = client[database_name]
         patients_before = db["patients"].count_documents({})

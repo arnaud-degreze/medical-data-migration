@@ -30,5 +30,31 @@ mongosh --quiet \
             mechanisms: ['SCRAM-SHA-256'],
             passwordDigestor: 'server'
         });
+
+        const testDatabase = db.getSiblingDB('medical_test');
+
+        testDatabase.createRole({
+            role: 'testDatabaseManager',
+            privileges: [
+                {
+                    resource: {db: 'medical_test', collection: ''},
+                    actions: ['dropDatabase', 'createIndex']
+                }
+            ],
+            roles: [
+                {role: 'readWrite', db: 'medical_test'}
+            ]
+        });
+
+        testDatabase.createUser({
+            user: '${MONGO_TESTER_USERNAME}',
+            pwd: '${MONGO_TESTER_PASSWORD}',
+            roles: [{
+                role: 'testDatabaseManager',
+                db: 'medical_test'
+            }],
+            mechanisms: ['SCRAM-SHA-256'],
+            passwordDigestor: 'server'
+        });
     "
 
