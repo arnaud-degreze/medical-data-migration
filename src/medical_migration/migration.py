@@ -3,11 +3,13 @@ from collections.abc import Callable
 from datetime import datetime
 from bson import ObjectId
 from pymongo import MongoClient, InsertOne, UpdateOne
+from pymongo.collection import Collection
 import pandas as pd
 import os
 
-# CLASS DEFINITION
+# CLASSES DEFINITION
 class Admission(TypedDict):
+    """ Class declares explicit types for MongoDB """
     MedicalCondition: str
     DateOfAdmission: datetime
     Doctor: str
@@ -22,13 +24,16 @@ class Admission(TypedDict):
     PatientId: ObjectId
 
 class Patient(TypedDict):
+    """ Class declares explicit types for MongoDB """
     Name: str
     Gender: str
     BloodType: str
     Age: int
 
-## MIGRATION FUNCTIONS
-def to_admission(row) -> Admission:
+
+## HELPERS
+def to_admission(row: dict) -> Admission:
+    """ Return the document typed with the Admission class """
     return {
         "PatientId": ObjectId(row["PatientId"]),
         "MedicalCondition": row["MedicalCondition"],
@@ -45,6 +50,7 @@ def to_admission(row) -> Admission:
     }
 
 def to_patient(row: dict) -> Patient:
+    """ Return the document typed with the Patient class """
     return {
         "Name": row["Name"],
         "Gender": row["Gender"],
@@ -54,50 +60,91 @@ def to_patient(row: dict) -> Patient:
 
 
 def patient_filter(row: dict) -> dict:
+    """
+    Returns the entire row.
+
+    Author's note:
+    The patient filter - or composite key - is made of the entire patient record (except the PatientId).
+    The function might seem silly since entry and return are the same, but it was made to keep consistency when
+    the create_or_update_collection function is called.
+    In doing so, the call is identical in arguments declaration whether it is for Admission or Patient.
+    """
     return to_patient(row)
 
 def admission_filter(row: dict) -> dict:
+    """
+    Returns the Admission filter as a dict.
+    """
     return {
         "PatientId": row["PatientId"],
         "DateOfAdmission": row["DateOfAdmission"],
         "MedicalCondition": row["MedicalCondition"]
     }
 
+
+# SECONDARY FUNCTIONS
 def create_or_update_collection(
     df: pd.DataFrame,
-    collection,
+    collection: Collection,
     build_filter: Callable[[dict], dict],
     build_document: Callable[[dict], dict]
 ) -> None:
+    """
+    Inject or update documents inside MongoDB collection
+
+    Requirements:
+    - non-empty DataFrame.
+
+    Author's note:
+    The simplest method I found to write my data while checking if it existed before was to use an UpdateOne
+    instruction for every patient/admission. If the document is present inside, nothing is done, else it is
+    upserted (= insert). However, the  MongoDB server is  called for each UpdateOne instruction, so a
+    bulk_write was used to reduce the number of server calls.
+
+    Another option would have been to insert only the new documents. But to do that, I would have needed
+    to load the collection. For a large collection, it could overload my memory - so I chose the first option.
+    """
+
+    if df.empty:
+        print(f"Collection {collection.name} :")
+        print("Aucun document à traiter.")
+        return
 
     operations = []
+
     for row in df.to_dict("records"):
         filter = build_filter(row)
         document = build_document(row)
 
-
         operations.append(
             UpdateOne(
                 filter,
-                {'$setOnInsert': document},
-                upsert=True
+                {"$setOnInsert": document},
+                upsert=True,
             )
         )
 
-    if operations:
-        results = collection.bulk_write(
-            operations,
-            ordered = False
-        )
+    results = collection.bulk_write(operations, ordered=False)
 
-    print(f"Collection {collection.name} : ")
+    print(f"Collection {collection.name} :")
     print(f"{results.upserted_count} nouveaux documents insérés.")
     print(f"{results.matched_count} documents déjà existants.")
 
+def build_patient_id_map(
+    patients_df: pd.DataFrame,
+    patients_collection: Collection
+) -> dict[ObjectId, ObjectId]:
 
-def build_patient_id_map(patients_df: pd.DataFrame,
-                         patients_collection):
+    """
+    Returns a dict object with the temporary ObjectId as key, and the MongoDB _id as the value.
 
+    Author's note:
+    Before, we had unique patients and admissions linked by a temporary ObjectId inside our data.
+    Now, we want to link the temporary id to the MongoDB id. To do that, we load every MongoDB entries
+    that are in our DataFrame and use a key (tuple) to make the link between the two IDs.
+
+    Since the data can be voluminous, we batch the process, by only using 500 patients at a time.
+    """
 
     records = patients_df.to_dict("records")
     patient_id_map = {}
@@ -149,8 +196,36 @@ def build_patient_id_map(patients_df: pd.DataFrame,
     return patient_id_map
 
 
+def associate_patients_id_with_admissions(
+    patient_id_map: dict[ObjectId, ObjectId],
+    admissions_df: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Map the MongoDB id to the temporary id present in the data.
 
-def ensure_indexes(collection):
+    Requirement:
+    - Every temporary id should have a MongoDB equivalent.
+    """
+    admissions_df = admissions_df.copy()
+    admissions_df["PatientId"] = admissions_df["PatientId"].map(patient_id_map)
+
+    if admissions_df["PatientId"].isna().any():
+        raise ValueError(
+            "Certains PatientId n'ont pas été associés à un patient MongoDB."
+        )
+    return admissions_df
+
+
+def ensure_indexes(collection: Collection) -> None:
+    """
+    Create or ensure indexes on each collection.
+
+    Author's Note:
+    They key to identifying a patient is a mixture of all its attributes.
+    For an admission, the PatientId, its admission date and its medical condition are enough
+    to make it unique.
+    As such, indexes will be created on each of these attributes.
+    """
     if collection.name == "patients":
         collection.create_index(
             [
@@ -173,31 +248,29 @@ def ensure_indexes(collection):
             name = "unique_admission"
         )
 
-def associate_patients_id_with_admissions(patient_id_map: dict,
-                                           admissions_df: pd.DataFrame):
-    admissions_df = admissions_df.copy()
-    admissions_df["PatientId"] = admissions_df["PatientId"].map(patient_id_map)
 
-    if admissions_df["PatientId"].isna().any():
-        raise ValueError(
-            "Certains PatientId n'ont pas été associés à un patient MongoDB."
-        )
-    return admissions_df
+# MAIN FUNCTION TO BE CALLED
+def migrate_data(
+    patients_df: pd.DataFrame,
+    admissions_df: pd.DataFrame,
+    database_name: str = 'medical'
+) -> None:
 
+    """
+    INTEGRATION FUNCTION - makes the migration happens.
 
-
-def migrate_data(patients_df: pd.DataFrame,
-                 admissions_df: pd.DataFrame,
-                 database_name: str | None = None) -> None:
+    Requirements:
+    - ENV variables available in the .env and declared in the environment instruction of the migration service.
+    """
 
     uri = os.getenv("MONGODB_URI")
-    username = os.getenv("MONGO_TESTER_USERNAME")
-    password = os.getenv("MONGO_TESTER_PASSWORD")
 
-    if database_name is None:
-        database_name = os.getenv("MONGODB_DB_NAME")
+    if database_name == os.getenv("MONGODB_DB_NAME"):
         username = os.getenv("MONGO_MIGRATION_USERNAME")
         password = os.getenv("MONGO_MIGRATION_PASSWORD")
+    else:
+        username = os.getenv("MONGO_TESTER_USERNAME")
+        password = os.getenv("MONGO_TESTER_PASSWORD")
 
     client = MongoClient(
         uri,
