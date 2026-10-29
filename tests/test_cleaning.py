@@ -17,7 +17,9 @@ def df_test_missing_values():
         "Gender": ["Female", "Male", "Female", None, "Female"],
         "Age": [25, 30, 40, 35, None],
         "BloodType": ["A+", "O+", "B+", "AB+", ""],
-        "PatientId": [1, 2, 3, 4, 5]
+        "PatientId": [1, 2, 3, 4, 5],
+        "MedicalCondition": ["CanFly", "CanSwim", None, "CanEat", "CanHear"],
+        "DateOfAdmission": ['2026-10-32', '2022-15-02', '1999-53-15', '1690-06-12' , '2024-10-22']
     })
 
 @pytest.fixture
@@ -41,7 +43,8 @@ def df_test_for_idempotence():
         "Room Number": [123, 320, 320, 236],
         "Hospital": ["H&H", "GrP", "GrP", "San Antonio"],
         "Date Of Admission": ["2020-11-17", "2021-06-12", "2021-06-12", "2019-02-24"],
-        "Discharge Date": ["2023-11-16", "2023-11-16", "2023-11-16", "2023-11-16"]
+        "Discharge Date": ["2023-11-16", "2023-11-16", "2023-11-16", "2023-11-16"],
+        "Medical Condition": ["VeryHealthy", "FindOne", "AteTooMuch", "Sit"]
     })
 
 # ---------------------- TEST FUNCTIONS DECLARATION -----------------------

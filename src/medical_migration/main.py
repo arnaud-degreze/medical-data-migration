@@ -29,7 +29,10 @@ def main():
     print("------ TRANSFORMATION TERMINEE ------")
 
     print("------ DEBUT DE LA MIGRATION ------")
-    migrate_data(patients_df, admissions_df)
+    migrate_data(
+        patients_df,
+        admissions_df,
+         database_name='medical')
     print("------ FIN DE LA MIGRATION ------")
 
 if __name__ == "__main__":
