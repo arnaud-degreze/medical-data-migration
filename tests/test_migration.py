@@ -112,8 +112,7 @@ def test_idempotence_migration(test_data):
     uri = os.getenv("MONGODB_URI")
     username = os.getenv("MONGO_TESTER_USERNAME")
     password = os.getenv("MONGO_TESTER_PASSWORD")
-
-    database_name = "medical_test"
+    database_name = os.getenv("MONGODB_TEST_DB_NAME")
 
     test_df=pd.DataFrame([test_data])
 
@@ -132,6 +131,10 @@ def test_idempotence_migration(test_data):
         "Medication",
         "TestResults"
     ]]
+
+    print("uri: ", uri),
+    print("username: ", username)
+    print("authSource: ", database_name)
 
     client = MongoClient(
         uri,

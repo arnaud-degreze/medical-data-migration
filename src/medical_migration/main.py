@@ -4,7 +4,7 @@ from .validation import validate_data
 from .transform import transform_data
 from .migration import migrate_data
 from pathlib import Path
-
+import os
 
 
 
@@ -32,7 +32,7 @@ def main():
     migrate_data(
         patients_df,
         admissions_df,
-         database_name='medical')
+        database_name=os.getenv("MONGODB_MIGRATION_DB_NAME"))
     print("------ FIN DE LA MIGRATION ------")
 
 if __name__ == "__main__":

@@ -265,7 +265,7 @@ def migrate_data(
 
     uri = os.getenv("MONGODB_URI")
 
-    if database_name == os.getenv("MONGODB_DB_NAME"):
+    if database_name == os.getenv("MONGODB_MIGRATION_DB_NAME"):
         username = os.getenv("MONGO_MIGRATION_USERNAME")
         password = os.getenv("MONGO_MIGRATION_PASSWORD")
     else:

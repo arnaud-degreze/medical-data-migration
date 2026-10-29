@@ -4,7 +4,6 @@ services:
         container_name: mongodb_medical
         ports:
             - "127.0.0.1:27017:27017"
-        env_file: .env
         environment:
             MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
             MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
@@ -41,7 +40,6 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
-        env_file: .env
         command: >
             sh -c "uv run pytest && uv run medical_migration"
         networks:
@@ -50,12 +48,16 @@ services:
             mongodb:
                 condition: service_healthy
         environment:
-            MONGODB_URI: "mongodb://mongodb:27017"
-            MONGODB_DB_NAME: "medical"
+            MONGODB_URI: ${MONGODB_URI}
+            MONGODB_MIGRATION_DB_NAME: ${MONGODB_MIGRATION_DB_NAME}
+            MONGO_MIGRATION_USERNAME: ${MONGO_MIGRATION_USERNAME}
+            MONGO_MIGRATION_PASSWORD: ${MONGO_MIGRATION_PASSWORD}
+            MONGODB_TEST_DB_NAME: ${MONGODB_TEST_DB_NAME}
+            MONGO_TESTER_USERNAME: ${MONGO_TESTER_USERNAME}
+            MONGO_TESTER_PASSWORD: ${MONGO_TESTER_PASSWORD}
         restart: "no"
         volumes:
             - ./data:/app/data:ro
-#        read_only: true
         cap_drop:
             - ALL
         security_opt:
