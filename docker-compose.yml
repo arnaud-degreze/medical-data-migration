@@ -40,8 +40,7 @@ services:
         build:
             context: .
             dockerfile: Dockerfile
-        command: >
-            sh -c "uv run pytest && uv run medical_migration"
+        command: ["sh" , "-c", "uv run pytest && uv run medical_migration"]
         networks:
             - medical_network
         depends_on:
