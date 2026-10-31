@@ -123,7 +123,7 @@ The project uses three dedicated database users:
 
 The separation of users prevents unnecessary access to production data and limits the impact of potential errors.
 
-#### Authentication Process
+#### Authentication Process and Mechanism
 
 The authentication process follows these steps:
 
@@ -132,6 +132,8 @@ The authentication process follows these steps:
 3. When connecting to MongoDB, clients must provide valid credentials.
 4. MongoDB authenticates the user against the configured authentication database.
 5. Once authenticated, the user can only perform operations permitted by their assigned roles.
+
+Concerning the mechanism at step 4, MongoDB uses SCRAM-SHA-256 (Salted Challenge Response Authentication Mechanism) to authenticate users. This challenge-response protocol verifies user credentials without transmitting the password directly in clear text during the authentication exchange.
 
 #### Usage
 
