@@ -13,7 +13,7 @@ def main():
     base_dir = Path(__file__).resolve().parent
     data_path = base_dir / "data" / "admissions.csv"
     print("------ CHARGEMENT DES DONNEES ------")
-    df = load_data("./data/healthcare_dataset.csv")
+    df = load_data("./data/healthcare_dataset_sample.csv")
     print("------ CHARGEMENT TERMINE ------")
 
     print("------ DEBUT DU NETTOYAGE ------")
